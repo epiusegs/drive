@@ -113,6 +113,8 @@ import { Annotation } from "./extensions/AnnotationExtension/annotation"
 import suggestion from "./extensions/suggestion/suggestion"
 import Commands from "./extensions/suggestion/suggestionExtension"
 import SnapshotPreviewDialog from "./components/SnapshotPreviewDialog.vue"
+import { DiffMarkExtension } from "./extensions/createDiffMark"
+
 import { formatDate } from "../../utils/format"
 import { Paragraph } from "./extensions/paragraph"
 
@@ -344,7 +346,7 @@ export default {
     if (window.matchMedia("(max-width: 1500px)").matches) {
       this.$store.commit("setIsSidebarExpanded", false)
     }
-    this.emitter.on("exportDocToPDF", () => {
+    this.emitter.on("printFile", () => {
       if (this.editor) {
         this.printEditorContent()
       }
@@ -533,9 +535,6 @@ export default {
         Link.configure({
           openOnClick: false,
         }),
-        Comment.configure({
-          isCommentModeOn: this.isCommentModeOn,
-        }),
         Placeholder.configure({
           placeholder: "Press / for commands",
         }),
@@ -566,6 +565,7 @@ export default {
         ResizableMedia.configure({
           uploadFn: (file) => uploadDriveEntity(file, this.entityName),
         }),
+        DiffMarkExtension,
       ],
     })
     this.emitter.on("emitToggleCommentMenu", () => {
@@ -630,6 +630,9 @@ export default {
     }
   },
   beforeUnmount() {
+    this.emitter.off("printFile")
+    this.emitter.off("forceHideBubbleMenu")
+    this.emitter.off("importDocFromWord")
     this.$realtime.off("document_version_change_recv")
     this.$realtime.doc_close("Drive Entity", this.entityName)
     this.$realtime.doc_unsubscribe("Drive Entity", this.entityName)
@@ -1001,6 +1004,11 @@ export default {
   #page-break-div {
     border: none !important;
     margin: none !important;
+  }
+  span[data-annotation-id] {
+    background-color: transparent !important;
+    border-bottom: none !important;
+    padding: none !important;
   }
 }
 /* 
